@@ -998,7 +998,7 @@ class WhoisPt(WhoisEntry):
     dayfirst = True
 
     def __init__(self, domain, text):
-        if text.strip() == 'No entries found':
+        if 'no match' in text:
             raise PywhoisError(text)
         else:
             WhoisEntry.__init__(self, domain, text, self.regex)
