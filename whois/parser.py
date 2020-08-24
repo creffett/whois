@@ -338,6 +338,8 @@ class WhoisEntry(dict):
             return WhoisIR(domain, text)
         elif domain.endswith('.lt'):
             return WhoisLt(domain, text)
+        elif domain.endswith('.ug'):
+            return WhoisUg(domain, text)
         else:
             return WhoisEntry(domain, text)
 
@@ -2661,11 +2663,37 @@ class WhoisLt(WhoisEntry):
         'expiration_date':      r'Expires: *(.+)',
         'registrar':            r'Registrar: *(.+)',
         'name_servers':         r'Nameserver: *(.+)',  # list of name servers
-        'emails':               EMAIL_REGEX,
+        'emails':               EMAIL_REGEX,  # list of email addresses
     }
 
     def __init__(self, domain, text):
         if 'No match for "' in text:
+            raise PywhoisError(text)
+        else:
+            WhoisEntry.__init__(self, domain, text, self.regex)
+
+
+class WhoisUg(WhoisEntry):
+    """Whois parser for .ug domains."""
+
+    regex = {
+        'domain_name':          r'Domain name: *(.+)',
+        'status':               r'Status: *(.+)',  # list of statuses
+        'expiration_date':      r'Expires On: *(.+)',
+        'creation_date':        r'Registered On: *(.+)',
+        'updated_date':         r'Renewed On: *(.+)',
+        'name_servers':         r'Nameserver: *(.+)',  # list of name servers
+        'name':                 r'Registrant Name: *(.+)',
+        'org':                  r'Registrant\s*Organization: *(.+)',
+        'country':              r'Registrant Country: *(.+)',
+        'state':                r'Registrant State/Province: *(.+)',
+        'city':                 r'Registrant City: *(.+)',
+        'zipcode':              r'Registrant Postal Code: *(.+)',
+        'emails':               EMAIL_REGEX,  # list of emails
+    }
+
+    def __init__(self, domain, text):
+        if 'No entries found"' in text:
             raise PywhoisError(text)
         else:
             WhoisEntry.__init__(self, domain, text, self.regex)
