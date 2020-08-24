@@ -342,6 +342,8 @@ class WhoisEntry(dict):
             return WhoisUg(domain, text)
         elif domain.endswith('.hu'):
             return WhoisHu(domain, text)
+        elif domain.endswith('.edu'):
+            return WhoisEdu(domain, text)
         else:
             return WhoisEntry(domain, text)
 
@@ -2714,3 +2716,25 @@ class WhoisHu(WhoisEntry):
             raise PywhoisError(text)
         else:
             WhoisEntry.__init__(self, domain, text, self.regex)
+
+
+class WhoisEdu(WhoisEntry):
+    """Whois parser for .edu domains."""
+
+    regex = {
+        'domain_name':          r'Domain Name: *(.+)',
+        'org':                  r'Registrant:\s*\n\s*(.*)',
+        'creation_date':        r'Domain record activated: *(.+)',
+        'updated_date':         r'Domain record last updated: *(.+)',
+        'expiration_date':      r'Domain expires: *(.+)',
+    }
+
+    def __init__(self, domain, text):
+        if 'No match' in text:
+            raise PywhoisError(text)
+        else:
+            WhoisEntry.__init__(self, domain, text, self.regex)
+            match = re.compile(r'Name Servers:\s*\n(.*)\n\s*Registered:', re.DOTALL).search(text)
+            if match:
+                self['name_servers'] = [line.strip()
+                                        for line in match.groups()[0].strip().splitlines()]
