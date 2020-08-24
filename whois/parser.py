@@ -336,6 +336,8 @@ class WhoisEntry(dict):
             return WhoisKZ(domain, text)
         elif domain.endswith('.ir'):
             return WhoisIR(domain, text)
+        elif domain.endswith('.lt'):
+            return WhoisLt(domain, text)
         else:
             return WhoisEntry(domain, text)
 
@@ -2640,6 +2642,26 @@ class WhoisIR(WhoisEntry):
         'expiration_date': 'expire-date: *(.+)',
         'name_servers': 'nserver: *(.+)',  # list of name servers
         'emails': EMAIL_REGEX,
+    }
+
+    def __init__(self, domain, text):
+        if 'No match for "' in text:
+            raise PywhoisError(text)
+        else:
+            WhoisEntry.__init__(self, domain, text, self.regex)
+
+
+class WhoisLt(WhoisEntry):
+    """Whois parser for .lt domains."""
+
+    regex = {
+        'domain_name':          r'Domain: *(.+)',
+        'status':               r'Status: *(.+)',  # list of statuses
+        'creation_date':        r'Registered: *(.+)',
+        'expiration_date':      r'Expires: *(.+)',
+        'registrar':            r'Registrar: *(.+)',
+        'name_servers':         r'Nameserver: *(.+)',  # list of name servers
+        'emails':               EMAIL_REGEX,
     }
 
     def __init__(self, domain, text):
