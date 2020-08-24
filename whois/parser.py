@@ -340,6 +340,8 @@ class WhoisEntry(dict):
             return WhoisLt(domain, text)
         elif domain.endswith('.ug'):
             return WhoisUg(domain, text)
+        elif domain.endswith('.hu'):
+            return WhoisHu(domain, text)
         else:
             return WhoisEntry(domain, text)
 
@@ -2693,7 +2695,22 @@ class WhoisUg(WhoisEntry):
     }
 
     def __init__(self, domain, text):
-        if 'No entries found"' in text:
+        if 'No entries found' in text:
+            raise PywhoisError(text)
+        else:
+            WhoisEntry.__init__(self, domain, text, self.regex)
+
+
+class WhoisHu(WhoisEntry):
+    """Whois parser for .hu domains."""
+
+    regex = {
+        'domain_name':          r'domain: *(.+)',
+        'creation_date':        r'record created: *(.+)',
+    }
+
+    def __init__(self, domain, text):
+        if 'No match' in text:
             raise PywhoisError(text)
         else:
             WhoisEntry.__init__(self, domain, text, self.regex)
