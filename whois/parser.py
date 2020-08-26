@@ -344,6 +344,8 @@ class WhoisEntry(dict):
             return WhoisHu(domain, text)
         elif domain.endswith('.edu'):
             return WhoisEdu(domain, text)
+        elif domain.endswith('.rs'):
+            return WhoisRs(domain, text)
         else:
             return WhoisEntry(domain, text)
 
@@ -2738,3 +2740,34 @@ class WhoisEdu(WhoisEntry):
             if match:
                 self['name_servers'] = [line.strip()
                                         for line in match.groups()[0].strip().splitlines()]
+
+
+class WhoisRs(WhoisEntry):
+    """Whois parser for .rs domains."""
+
+    regex = {
+        'domain_name':          r'Domain name: *(.+)',
+        'status':               r'Domain status: *(.+)',  # list of statuses
+        'creation_date':        r'Registration date: *(.+)',
+        'updated_date':         r'Modification date: *(.+)',
+        'expiration_date':      r'Expiration date: *(.+)',
+        'registrar':            r'Registrar: *(.+)',
+        'name_servers':         r'DNS: *(.+)',  # list of name servers
+        'org':                  r'Registrant: *(.+)',
+        'address':              r'Address: *(.+)',
+        'whois_server':         r'Whois Server: *(.+)',
+        'referral_url':         r'Referral URL: *(.+)',  # http url of whois_server
+        'emails':               EMAIL_REGEX,  # list of email s
+        'dnssec':               r'dnssec: *([\S]+)',
+        'name':                 r'Registrant Name: *(.+)',
+        'city':                 r'Registrant City: *(.+)',
+        'state':                r'Registrant State/Province: *(.+)',
+        'zipcode':              r'Registrant Postal Code: *(.+)',
+        'country':              r'Registrant Country: *(.+)',
+    }
+
+    def __init__(self, domain, text):
+        if 'Domain is not registered' in text:
+            raise PywhoisError(text)
+        else:
+            WhoisEntry.__init__(self, domain, text, self.regex)
